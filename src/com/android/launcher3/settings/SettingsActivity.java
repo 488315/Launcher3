@@ -52,6 +52,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.android.launcher3.BuildConfig;
 import com.android.launcher3.LauncherFiles;
 import com.android.launcher3.R;
+import com.android.launcher3.lineage.LineageUtils;
 import com.android.launcher3.model.WidgetsModel;
 import com.android.launcher3.states.RotationHelper;
 import com.android.launcher3.uioverrides.flags.DeveloperOptionsUI;
@@ -71,6 +72,9 @@ public class SettingsActivity extends FragmentActivity
     private static final String NOTIFICATION_DOTS_PREFERENCE_KEY = "pref_icon_badging";
 
     public static final String EXTRA_FRAGMENT_ARGS = ":settings:fragment_args";
+
+    private static final String KEY_MINUS_ONE = "pref_enable_minus_one";
+    private static final String SEARCH_PACKAGE = "com.google.android.googlequicksearchbox";
 
     // Intent extra to indicate the pref-key to highlighted when opening the settings activity
     public static final String EXTRA_FRAGMENT_HIGHLIGHT_KEY = ":settings:fragment_args_key";
@@ -262,6 +266,8 @@ public class SettingsActivity extends FragmentActivity
                         return true;
                     }
                     return false;
+                    case KEY_MINUS_ONE:
+                        return LineageUtils.isPackageEnabled(getActivity(), SEARCH_PACKAGE);
             }
 
             return true;
