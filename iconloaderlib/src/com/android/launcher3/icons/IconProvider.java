@@ -192,7 +192,7 @@ public class IconProvider {
                 }
                 return drawable;
             }
-        } catch (PackageManager.NameNotFoundException e) {
+        } catch (NameNotFoundException e) {
             if (DEBUG) {
                 Log.d(TAG, "Could not get activityinfo or resources for package: "
                         + mCalendar.getPackageName());

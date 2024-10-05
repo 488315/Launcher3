@@ -15,16 +15,20 @@
  */
 package com.android.launcher3.uioverrides.states;
 
-import static com.android.launcher3.anim.Interpolators.DEACCEL_2;
+import static com.android.launcher3.anim.Interpolators.DECELERATE_2;
 import static com.android.launcher3.logging.StatsLogManager.LAUNCHER_STATE_ALLAPPS;
 
 import android.content.Context;
 
+import com.android.internal.jank.Cuj;
+import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherState;
 import com.android.launcher3.R;
+import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.util.Themes;
 import com.android.launcher3.views.ActivityContext;
+import com.android.systemui.shared.system.InteractionJankMonitorWrapper;
 
 /**
  * Definition for AllApps state
@@ -44,6 +48,24 @@ public class AllAppsState extends LauncherState {
         return isToState
                 ? context.getDeviceProfile().allAppsOpenDuration
                 : context.getDeviceProfile().allAppsCloseDuration;
+    }
+
+    @Override
+    public void onBackPressed(Launcher launcher) {
+        InteractionJankMonitorWrapper.begin(launcher.getAppsView(),
+                Cuj.CUJ_LAUNCHER_CLOSE_ALL_APPS_BACK);
+        super.onBackPressed(launcher);
+    }
+
+    @Override
+    protected void onBackPressCompleted(boolean success) {
+        if (success) {
+            // Animation was successful.
+            InteractionJankMonitorWrapper.end(Cuj.CUJ_LAUNCHER_CLOSE_ALL_APPS_BACK);
+        } else {
+            // Animation was canceled.
+            InteractionJankMonitorWrapper.cancel(Cuj.CUJ_LAUNCHER_CLOSE_ALL_APPS_BACK);
+        }
     }
 
     @Override
@@ -91,7 +113,7 @@ public class AllAppsState extends LauncherState {
     @Override
     public PageAlphaProvider getWorkspacePageAlphaProvider(Launcher launcher) {
         PageAlphaProvider superPageAlphaProvider = super.getWorkspacePageAlphaProvider(launcher);
-        return new PageAlphaProvider(DEACCEL_2) {
+        return new PageAlphaProvider(DECELERATE_2) {
             @Override
             public float getPageAlpha(int pageIndex) {
                 return launcher.getDeviceProfile().isTablet
@@ -103,14 +125,52 @@ public class AllAppsState extends LauncherState {
 
     @Override
     public int getVisibleElements(Launcher launcher) {
-        // Don't add HOTSEAT_ICONS for non-tablets in ALL_APPS state.
-        return launcher.getDeviceProfile().isTablet ? ALL_APPS_CONTENT | HOTSEAT_ICONS
-                : ALL_APPS_CONTENT;
+        int elements = ALL_APPS_CONTENT | FLOATING_SEARCH_BAR;
+        // Only add HOTSEAT_ICONS for tablets in ALL_APPS state.
+        if (launcher.getDeviceProfile().isTablet) {
+            elements |= HOTSEAT_ICONS;
+        }
+        return elements;
+    }
+
+    @Override
+    public int getFloatingSearchBarRestingMarginBottom(Launcher launcher) {
+        return 0;
+    }
+
+    @Override
+    public int getFloatingSearchBarRestingMarginStart(Launcher launcher) {
+        DeviceProfile dp = launcher.getDeviceProfile();
+        return dp.allAppsLeftRightMargin + dp.getAllAppsIconStartMargin(launcher);
+    }
+
+    @Override
+    public int getFloatingSearchBarRestingMarginEnd(Launcher launcher) {
+        DeviceProfile dp = launcher.getDeviceProfile();
+        return dp.allAppsLeftRightMargin + dp.getAllAppsIconStartMargin(launcher);
+    }
+
+    @Override
+    public boolean shouldFloatingSearchBarUsePillWhenUnfocused(Launcher launcher) {
+        DeviceProfile dp = launcher.getDeviceProfile();
+        return dp.isPhone && !dp.isLandscape;
     }
 
     @Override
     public LauncherState getHistoryForState(LauncherState previousState) {
-        return previousState == OVERVIEW ? OVERVIEW : NORMAL;
+        return previousState == BACKGROUND_APP ? QUICK_SWITCH_FROM_HOME
+                : previousState == OVERVIEW ? OVERVIEW : NORMAL;
+    }
+
+    @Override
+    public float[] getOverviewScaleAndOffset(Launcher launcher) {
+        if (!FeatureFlags.ENABLE_ALL_APPS_FROM_OVERVIEW.get()) {
+            return super.getOverviewScaleAndOffset(launcher);
+        }
+        // This handles the case of returning to the previous app from Overview -> All Apps gesture.
+        // This is the start scale/offset of overview that will be used for that transition.
+        // TODO (b/283336332): Translate in Y direction (ideally with overview resistance).
+        return new float[] {0.5f /* scale */, NO_OFFSET};
     }
 
     @Override

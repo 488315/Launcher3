@@ -18,6 +18,10 @@ package com.android.launcher3
 import android.content.Context
 import android.graphics.PointF
 import android.graphics.Rect
+import android.platform.test.rule.AllowedDevices
+import android.platform.test.rule.DeviceProduct
+import android.platform.test.rule.IgnoreLimit
+import android.platform.test.rule.LimitDevicesRule
 import android.util.SparseArray
 import androidx.test.core.app.ApplicationProvider
 import com.android.launcher3.DeviceProfile.DEFAULT_DIMENSION_PROVIDER
@@ -27,9 +31,10 @@ import com.android.launcher3.util.WindowBounds
 import java.io.PrintWriter
 import java.io.StringWriter
 import org.junit.Before
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when` as whenever
+import org.junit.Rule
+import org.mockito.kotlin.any
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 /**
  * This is an abstract class for DeviceProfile tests that don't need the real Context and mock an
@@ -37,16 +42,21 @@ import org.mockito.Mockito.`when` as whenever
  *
  * For an implementation that creates InvariantDeviceProfile, use [AbstractDeviceProfileTest]
  */
+@AllowedDevices(allowed = [DeviceProduct.CF_PHONE])
+@IgnoreLimit(ignoreLimit = BuildConfig.IS_STUDIO_BUILD)
 abstract class FakeInvariantDeviceProfileTest {
 
     protected var context: Context? = null
     protected var inv: InvariantDeviceProfile? = null
-    protected var info: Info = mock(Info::class.java)
+    protected val info: Info = mock()
     protected var windowBounds: WindowBounds? = null
     protected var isMultiWindowMode: Boolean = false
     protected var transposeLayoutWithOrientation: Boolean = false
     protected var useTwoPanels: Boolean = false
     protected var isGestureMode: Boolean = true
+    protected var isTransientTaskbar: Boolean = true
+
+    @Rule @JvmField val limitDevicesRule = LimitDevicesRule()
 
     @Before
     fun setUp() {
@@ -68,7 +78,8 @@ abstract class FakeInvariantDeviceProfileTest {
             useTwoPanels,
             isGestureMode,
             DEFAULT_PROVIDER,
-            DEFAULT_DIMENSION_PROVIDER
+            DEFAULT_DIMENSION_PROVIDER,
+            isTransientTaskbar,
         )
 
     protected fun initializeVarsForPhone(
@@ -93,6 +104,7 @@ abstract class FakeInvariantDeviceProfileTest {
         whenever(info.smallestSizeDp(any())).thenReturn(411f)
 
         this.isGestureMode = isGestureMode
+        this.isTransientTaskbar = false
         transposeLayoutWithOrientation = true
 
         inv =
@@ -118,8 +130,8 @@ abstract class FakeInvariantDeviceProfileTest {
                     listOf(PointF(16f, 16f), PointF(16f, 16f), PointF(16f, 16f), PointF(16f, 16f))
                         .toTypedArray()
 
-                numFolderRows = 3
-                numFolderColumns = 3
+                numFolderRows = intArrayOf(3, 3, 3, 3)
+                numFolderColumns = intArrayOf(3, 3, 3, 3)
                 folderStyle = R.style.FolderStyleDefault
 
                 inlineNavButtonsEndSpacing = R.dimen.taskbar_button_margin_split
@@ -145,7 +157,6 @@ abstract class FakeInvariantDeviceProfileTest {
 
                 numDatabaseHotseatIcons = 4
 
-                hotseatColumnSpan = IntArray(4) { 4 }
                 hotseatBarBottomSpace = FloatArray(4) { 48f }
                 hotseatQsbSpace = FloatArray(4) { 36f }
 
@@ -175,6 +186,7 @@ abstract class FakeInvariantDeviceProfileTest {
         whenever(info.smallestSizeDp(any())).thenReturn(800f)
 
         this.isGestureMode = isGestureMode
+        this.isTransientTaskbar = true
         useTwoPanels = false
 
         inv =
@@ -200,8 +212,8 @@ abstract class FakeInvariantDeviceProfileTest {
                     listOf(PointF(16f, 64f), PointF(64f, 16f), PointF(16f, 64f), PointF(16f, 64f))
                         .toTypedArray()
 
-                numFolderRows = 3
-                numFolderColumns = 3
+                numFolderRows = intArrayOf(3, 3, 3, 3)
+                numFolderColumns = intArrayOf(3, 3, 3, 3)
                 folderStyle = R.style.FolderStyleDefault
 
                 inlineNavButtonsEndSpacing = R.dimen.taskbar_button_margin_6_5
@@ -227,7 +239,6 @@ abstract class FakeInvariantDeviceProfileTest {
 
                 numDatabaseHotseatIcons = 6
 
-                hotseatColumnSpan = intArrayOf(6, 4, 6, 6)
                 hotseatBarBottomSpace = floatArrayOf(36f, 40f, 36f, 36f)
                 hotseatQsbSpace = FloatArray(4) { 32f }
 
@@ -246,8 +257,10 @@ abstract class FakeInvariantDeviceProfileTest {
     }
 
     protected fun initializeVarsForTwoPanel(
-        isLandscape: Boolean = false,
-        isGestureMode: Boolean = true
+            isLandscape: Boolean = false,
+            isGestureMode: Boolean = true,
+            rows: Int = 4,
+            cols: Int = 4,
     ) {
         val (x, y) = if (isLandscape) Pair(2208, 1840) else Pair(1840, 2208)
 
@@ -258,13 +271,14 @@ abstract class FakeInvariantDeviceProfileTest {
         whenever(info.smallestSizeDp(any())).thenReturn(700f)
 
         this.isGestureMode = isGestureMode
+        this.isTransientTaskbar = true
         useTwoPanels = true
 
         inv =
             InvariantDeviceProfile().apply {
-                numRows = 4
-                numColumns = 4
-                numSearchContainerColumns = 4
+                numRows = rows
+                numColumns = cols
+                numSearchContainerColumns = cols
 
                 iconSize = floatArrayOf(60f, 52f, 52f, 60f)
                 iconTextSize = floatArrayOf(14f, 14f, 12f, 14f)
@@ -283,8 +297,8 @@ abstract class FakeInvariantDeviceProfileTest {
                     listOf(PointF(16f, 16f), PointF(16f, 16f), PointF(16f, 20f), PointF(20f, 20f))
                         .toTypedArray()
 
-                numFolderRows = 3
-                numFolderColumns = 3
+                numFolderRows = intArrayOf(3, 3, 3, 3)
+                numFolderColumns = intArrayOf(3, 3, 3, 3)
                 folderStyle = R.style.FolderStyleDefault
 
                 inlineNavButtonsEndSpacing = R.dimen.taskbar_button_margin_split
@@ -305,7 +319,6 @@ abstract class FakeInvariantDeviceProfileTest {
 
                 numDatabaseHotseatIcons = 6
 
-                hotseatColumnSpan = IntArray(4) { 6 }
                 hotseatBarBottomSpace = floatArrayOf(48f, 48f, 36f, 20f)
                 hotseatQsbSpace = floatArrayOf(36f, 36f, 36f, 28f)
 

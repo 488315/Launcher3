@@ -57,7 +57,7 @@ public class TaskbarModelCallbacks implements
     private final TaskbarView mContainer;
 
     // Initialized in init.
-    private TaskbarControllers mControllers;
+    protected TaskbarControllers mControllers;
 
     // Used to defer any UI updates during the SUW unstash animation.
     private boolean mDeferUpdatesForSUW;
@@ -206,17 +206,10 @@ public class TaskbarModelCallbacks implements
 
         if (mDeferUpdatesForSUW) {
             ItemInfo[] finalHotseatItemInfos = hotseatItemInfos;
-            mDeferredUpdates = () -> {
-                updateHotseatItemsAndBackground(finalHotseatItemInfos);
-            };
+            mDeferredUpdates = () -> mContainer.updateHotseatItems(finalHotseatItemInfos);
         } else {
-            updateHotseatItemsAndBackground(hotseatItemInfos);
+            mContainer.updateHotseatItems(hotseatItemInfos);
         }
-    }
-
-    private void updateHotseatItemsAndBackground(ItemInfo[] hotseatItemInfos) {
-        mContainer.updateHotseatItems(hotseatItemInfos);
-        mControllers.taskbarViewController.updateIconsBackground();
     }
 
     /**

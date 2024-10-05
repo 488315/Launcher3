@@ -30,16 +30,16 @@ import android.os.Build.VERSION_CODES;
  */
 public interface BitmapRenderer {
 
-    boolean USE_HARDWARE_BITMAP = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P;
+    boolean USE_HARDWARE_BITMAP = Build.VERSION.SDK_INT >= VERSION_CODES.P;
 
     static Bitmap createSoftwareBitmap(int width, int height, BitmapRenderer renderer) {
         GraphicsUtils.noteNewBitmapCreated();
-        Bitmap result = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Bitmap result = Bitmap.createBitmap(width, height, Config.ARGB_8888);
         renderer.draw(new Canvas(result));
         return result;
     }
 
-    @TargetApi(Build.VERSION_CODES.P)
+    @TargetApi(VERSION_CODES.P)
     static Bitmap createHardwareBitmap(int width, int height, BitmapRenderer renderer) {
         if (!USE_HARDWARE_BITMAP) {
             return createSoftwareBitmap(width, height, renderer);

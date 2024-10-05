@@ -21,6 +21,7 @@ import static com.android.launcher3.icons.BaseIconFactory.getFullResDefaultActiv
 import static com.android.launcher3.icons.BitmapInfo.LOW_RES_ICON;
 import static com.android.launcher3.icons.GraphicsUtils.flattenBitmap;
 import static com.android.launcher3.icons.GraphicsUtils.setColorAlphaBound;
+import static com.android.launcher3.icons.cache.IconCacheUpdateHandler.ICON_UPDATE_TOKEN;
 
 import static java.util.Objects.requireNonNull;
 
@@ -45,7 +46,6 @@ import android.os.Handler;
 import android.os.LocaleList;
 import android.os.Looper;
 import android.os.Process;
-import android.os.SystemClock;
 import android.os.Trace;
 import android.os.UserHandle;
 import android.text.TextUtils;
@@ -209,7 +209,7 @@ public abstract class BaseIconCache {
     public Drawable getFullResIcon(@NonNull final String packageName, final int iconId) {
         try {
             return getFullResIcon(mPackageManager.getResourcesForApplication(packageName), iconId);
-        } catch (PackageManager.NameNotFoundException e) { }
+        } catch (NameNotFoundException e) { }
         return getFullResDefaultActivityIcon(mIconDpi);
     }
 
@@ -218,7 +218,7 @@ public abstract class BaseIconCache {
         try {
             return getFullResIcon(mPackageManager.getResourcesForApplication(info.applicationInfo),
                     info.getIconResource());
-        } catch (PackageManager.NameNotFoundException e) { }
+        } catch (NameNotFoundException e) { }
         return getFullResDefaultActivityIcon(mIconDpi);
     }
 
@@ -329,9 +329,11 @@ public abstract class BaseIconCache {
         if (entry.bitmap.isNullOrLowRes()) return;
 
         CharSequence entryTitle = cachingLogic.getLabel(object);
-        if (entryTitle == null) {
-            Log.wtf(TAG, "No label returned from caching logic instance: " + cachingLogic);
-            entryTitle = "";
+        if (TextUtils.isEmpty(entryTitle)) {
+            if (entryTitle == null) {
+                Log.wtf(TAG, "No label returned from caching logic instance: " + cachingLogic);
+            }
+            entryTitle = componentName.getPackageName();;
         }
         entry.title = entryTitle;
 
@@ -490,13 +492,23 @@ public abstract class BaseIconCache {
             @NonNull final T object, @NonNull final CacheEntry entry,
             @NonNull final CachingLogic<T> cachingLogic, @NonNull final UserHandle user) {
         entry.title = cachingLogic.getLabel(object);
+        if (TextUtils.isEmpty(entry.title)) {
+            entry.title = cachingLogic.getComponent(object).getPackageName();
+        }
         entry.contentDescription = getUserBadgedLabel(
                 cachingLogic.getDescription(object, entry.title), user);
     }
 
-    public synchronized void clear() {
+    public synchronized void clearMemoryCache() {
         assertWorkerThread();
-        mIconDb.clear();
+        mCache.clear();
+    }
+
+    /**
+     * Returns true if an icon update is in progress
+     */
+    public boolean isIconUpdateInProgress() {
+        return mWorkerHandler.hasMessages(0, ICON_UPDATE_TOKEN);
     }
 
     /**
@@ -541,6 +553,7 @@ public abstract class BaseIconCache {
      */
     @WorkerThread
     @NonNull
+    @SuppressWarnings("NewApi")
     protected CacheEntry getEntryForPackageLocked(@NonNull final String packageName,
             @NonNull final UserHandle user, final boolean useLowResIcon) {
         assertWorkerThread();
@@ -554,9 +567,10 @@ public abstract class BaseIconCache {
             // Check the DB first.
             if (!getEntryFromDBLocked(cacheKey, entry, useLowResIcon)) {
                 try {
-                    int flags = Process.myUserHandle().equals(user) ? 0 :
+                    long flags = Process.myUserHandle().equals(user) ? 0 :
                             PackageManager.GET_UNINSTALLED_PACKAGES;
-                    PackageInfo info = mPackageManager.getPackageInfo(packageName, flags);
+                    PackageInfo info = mPackageManager.getPackageInfo(packageName,
+                            PackageManager.PackageInfoFlags.of(flags));
                     ApplicationInfo appInfo = info.applicationInfo;
                     if (appInfo == null) {
                         throw new NameNotFoundException("ApplicationInfo is null");
@@ -572,8 +586,9 @@ public abstract class BaseIconCache {
 
                     entry.title = appInfo.loadLabel(mPackageManager);
                     entry.contentDescription = getUserBadgedLabel(entry.title, user);
-                    entry.bitmap = BitmapInfo.of(
-                            useLowResIcon ? LOW_RES_ICON : iconInfo.icon, iconInfo.color);
+                    entry.bitmap = useLowResIcon
+                            ? BitmapInfo.of(LOW_RES_ICON, iconInfo.color)
+                            : iconInfo;
 
                     // Add the icon in the DB here, since these do not get written during
                     // package updates.

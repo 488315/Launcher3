@@ -15,12 +15,13 @@
  */
 package com.android.launcher3.anim;
 
-import static com.android.launcher3.anim.Interpolators.LINEAR;
 
 import android.animation.Animator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.util.FloatProperty;
+import android.view.animation.Interpolator;
+import android.view.animation.LinearInterpolator;
 
 import androidx.annotation.FloatRange;
 import androidx.dynamicanimation.animation.SpringForce;
@@ -32,7 +33,7 @@ import com.android.launcher3.util.window.RefreshRateTracker;
  * an underdamped spring.
  */
 public class SpringAnimationBuilder {
-
+    public static final Interpolator LINEAR = new LinearInterpolator();
     private final Context mContext;
 
     private float mStartValue;
