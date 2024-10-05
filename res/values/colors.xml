@@ -173,4 +173,21 @@
     <color name="material_color_primary">#445E91</color>
     <color name="material_color_secondary">#575E71</color>
     <color name="material_color_tertiary">#715573</color>
+
+    <!-- Material next track outline color-->
+    <color name="settingslib_track_online_color">@color/settingslib_switch_track_outline_color</color>
+    <!-- Material next thumb disable color-->
+    <color name="settingslib_thumb_disabled_color">@color/settingslib_materialColorOutline</color>
+    <color name="settingslib_materialColorOutline">@android:color/system_outline_light</color>
+    <color name="settingslib_track_on_color">@color/settingslib_materialColorPrimary</color>
+    <color name="settingslib_materialColorPrimary">@android:color/system_primary_light</color>
+    <!-- Material next thumb off color-->
+    <color name="settingslib_thumb_off_color">@color/settingslib_materialColorOutline</color>
+    <color name="settingslib_thumb_on_color">@color/settingslib_materialColorOnPrimary</color>
+    <color name="settingslib_materialColorOnPrimary">@android:color/system_on_primary_light</color>
+    <color name="settingslib_track_off_color">@color/settingslib_materialColorSurfaceContainerHighest</color>
+    <color name="settingslib_materialColorSurfaceContainerHighest">@android:color/system_surface_container_highest_light</color>
+
+
+
 </resources>

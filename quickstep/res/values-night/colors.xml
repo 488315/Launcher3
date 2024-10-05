@@ -25,7 +25,18 @@
     <color name="all_set_page_background">#FF000000</color>
 
     <!-- Turn on work apps button -->
-    <color name="work_turn_on_stroke">?androidprv:attr/colorAccentSecondaryVariant</color>
-    <color name="work_fab_bg_color">?androidprv:attr/materialColorPrimaryFixedDim</color>
-    <color name="work_fab_icon_color">?androidprv:attr/materialColorOnPrimaryFixed</color>
+    <color name="work_turn_on_stroke">@color/material_color_secondary</color>
+    <color name="work_fab_bg_color">?attr/materialColorPrimaryFixedDim</color>
+    <color name="work_fab_icon_color">?attr/materialColorOnPrimaryFixed</color>
+    <!-- Material next thumb disable color-->
+    <color name="settingslib_thumb_disabled_color">@color/settingslib_materialColorOutline</color>
+    <color name="settingslib_materialColorOutline">@android:color/system_outline_dark</color>
+    <color name="settingslib_track_on_color">@color/settingslib_materialColorPrimary</color>
+    <color name="settingslib_materialColorPrimary">@android:color/system_primary_light</color>
+    <!-- Material next thumb off color-->
+    <color name="settingslib_thumb_off_color">@color/settingslib_materialColorOutline</color>
+    <color name="settingslib_thumb_on_color">@color/settingslib_materialColorOnPrimary</color>
+    <color name="settingslib_materialColorOnPrimary">@android:color/system_on_primary_dark</color>
+    <color name="settingslib_materialColorSurfaceContainerHighest">@android:color/system_surface_container_highest_dark</color>
+
 </resources>

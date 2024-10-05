@@ -502,4 +502,5 @@
 
     <!-- WindowManagerProxy -->
     <dimen name="max_width_and_height_of_small_display_cutout">136px</dimen>
+    <dimen name="settingslib_preferred_minimum_touch_target">48dp</dimen>
 </resources>
