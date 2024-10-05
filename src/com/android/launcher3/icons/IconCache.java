@@ -248,12 +248,11 @@ public class IconCache extends BaseIconCache {
      */
     @SuppressWarnings("NewApi")
     public synchronized void getTitleAndIcon(ItemInfoWithIcon info,
-            LauncherActivityInfo activityInfo, boolean useLowResIcon) {
-        boolean isAppArchived = Flags.enableSupportForArchiving() && activityInfo != null
-                && activityInfo.getActivityInfo().isArchived;
+                                             LauncherActivityInfo activityInfo, boolean useLowResIcon) {
         // If we already have activity info, no need to use package icon
-        getTitleAndIcon(info, () -> activityInfo, isAppArchived, useLowResIcon,
-                isAppArchived);
+        getTitleAndIcon(info, () -> activityInfo, false, useLowResIcon,
+
+        false);
     }
 
     /**
